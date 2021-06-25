@@ -1,0 +1,93 @@
+
+// Create member enums
+db.createCollection( "members", {
+    validator: { $jsonSchema: {
+       bsonType: "object",
+       required: [ "memberName","memberId","createdDate" ],
+       properties: {
+          memberName: {
+             bsonType: "string",
+             description: "must be a string and is required"
+          },
+          memberId: {
+             bsonType: "string",
+             description: "must be a string and is required"
+          },
+          createdDate: {
+             bsonType : "date",
+             description: "must be a valid date"
+          },
+          status: {
+             enum: [ "active", "inactive" ],
+             description: "can only be one of the enum values",
+          }
+       }
+    } }
+ } )
+
+
+ db.members.insert({memberName:'abc1',memberId:1,createdDate:new Date(),status:'active'})
+
+  db.slots.insert({memberName:'abc1',memberId:1,createdDate:new Date(),status:'active'})
+
+
+
+
+  db.testtab.insert({memberName:'sds1',slots:[{test:'1'},{test:'2'}]})
+
+
+  // Create Slots enum
+
+db.slotconfig.insert(
+    {
+      slotDay: 'SUNDAY',
+      slots: [
+        {
+          slot: '6-7am'
+        },
+        {
+          slot: '7-8am'
+        },
+        {
+          slot: '5-6pm'
+        }
+      ]
+    }
+)
+
+
+db.daywiseSlotInfo.insert(
+  {
+    slotDay: 'THURSDAY',
+    slotDate: '2021-06-24',
+    slots: [
+      {
+        slot: '6-7am',
+        members: [
+          {
+            member: 'abc'
+          }
+        ]
+      },
+      {
+        slot: '7-8am',
+        members: [
+          {
+            member: 'abc'
+          }
+        ]
+      },
+      {
+        slot: '5-6pm',
+        members: [
+          {
+            member: 'abc'
+          }
+        ]
+      }
+    ]
+  }
+)
+
+
+
