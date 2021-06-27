@@ -16,65 +16,95 @@ var mongoose = require("mongoose"),
 
 exports.getAllMembers = function (req, res) {
   Member.find({}, function (err, member) {
-    console.log("Member:>>", member);
+    // console.log("Member:>>", member);
     if (err) res.send(err);
     res.json(member);
   });
 };
 
 exports.getAllSlotInfo = function (req, res) {
-  // empty response so add an entry
-  const currentDate = moment().format("YYYY-MM-DD");
-  const currentDayName = moment().format("dddd").toLocaleUpperCase();
-  console.log("date and day:>>", currentDate, currentDayName);
-  DayWiseSlotInfo.find({ slotDate: currentDate }, function (err, slot) {
-    if (err) {
-      res.send(err);
-    }
-    if (!slot.length) {
-      // get all slots
-      Slotconfig.find({ slotDay: currentDayName }, function (err, slotInfo) {
-        if (slotInfo.length) {
-          const slots = slotInfo[0].slots;
-          console.log("testing:>>>", slotInfo[0], slots);
-          const newDayWiseData = [
-            {
-              slotDay: currentDayName,
-              slotDate: currentDate,
-              slots,
-            },
-          ];
-          console.log("testing:>>>", newDayWiseData);
-          DayWiseSlotInfo.create(newDayWiseData, function (error, docs) {
-            if (error) {
-              console.log("issue in DayWise Slot info:", error);
-            } else {
-              console.log("Success in DayWise Slot info:", docs);
-              res.json(docs);
-            }
-          });
+  const consecutiveDays = [];
+
+  consecutiveDays.push({
+    currentDate: moment().format("YYYY-MM-DD"),
+    currentDayName: moment().format("dddd").toLocaleUpperCase(),
+  });
+  consecutiveDays.push({
+    currentDate: moment().add(1, "day").format("YYYY-MM-DD"),
+    currentDayName: moment().add(1, "day").format("dddd").toLocaleUpperCase(),
+  });
+  consecutiveDays.push({
+    currentDate: moment().add(2, "day").format("YYYY-MM-DD"),
+    currentDayName: moment().add(2, "day").format("dddd").toLocaleUpperCase(),
+  });
+
+  for (const individualDay of consecutiveDays) {
+    DayWiseSlotInfo.find(
+      { slotDate: individualDay.currentDate },
+      function (err, slot) {
+        if (err) {
+          res.send(err);
         }
-      });
-    } else {
+        if (!slot.length) {
+          // get all slots
+          Slotconfig.find(
+            { slotDay: individualDay.currentDayName },
+            function (err, slotInfo) {
+              if (slotInfo.length) {
+                const slots = slotInfo[0].slots;
+                const newDayWiseData = [
+                  {
+                    slotDay: individualDay.currentDayName,
+                    slotDate: individualDay.currentDate,
+                    slots,
+                  },
+                ];
+                DayWiseSlotInfo.create(newDayWiseData, function (error, docs) {
+                  if (error) {
+                    console.log("issue in DayWise Slot info:", error);
+                  } else {
+                    // console.log("Success in DayWise Slot info:", docs);
+                    // res.json(docs);
+                  }
+                });
+              }
+            }
+          );
+        }
+      }
+    );
+  }
+
+  DayWiseSlotInfo.find(
+    {
+      $or: [
+        { slotDate: consecutiveDays[0].currentDate },
+        { slotDate: consecutiveDays[1].currentDate },
+        { slotDate: consecutiveDays[2].currentDate },
+      ],
+    },
+    function (err, slot) {
+      if (err) {
+        res.send(err);
+      }
       res.json(slot);
     }
-  });
+  );
 };
 
 exports.updateSlotInfo = function (req, res) {
-  console.log("update data called:>", req);
+  console.log("update data called:>", req?.body);
 
-  const currentDate = moment().format("YYYY-MM-DD");
-  const currentDayName = moment().format("dddd").toLocaleUpperCase();
+  const slotDate = req?.body?.slotDate;
 
   DayWiseSlotInfo.updateMany(
-    { slotDay: currentDayName, slotDate: currentDate },
+    { slotDate: slotDate },
     { $set: { slots: req?.body?.slots } },
     function (error, docs) {
       if (error) {
         console.log("issue in DayWise Slot info:", error);
       } else {
-        console.log("Success in DayWise Slot info:", docs);
+        // console.log("Success in DayWise Slot info:", docs);
         // res.json(docs);
       }
     }
